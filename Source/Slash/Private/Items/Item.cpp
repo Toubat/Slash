@@ -7,24 +7,33 @@
 AItem::AItem()
 {
 	PrimaryActorTick.bCanEverTick = true;
-
 }
 
 void AItem::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UWorld* World = GetWorld();
-	FVector Location = GetActorLocation();
-	FVector Forward = GetActorForwardVector();
-
-	DRAW_SPHERE(Location);
-	DRAW_VECTOR(Location, Location + Forward * 100.f);
 }
 
+float AItem::TransformSin()
+{
+	return Amplitude * FMath::Sin(Frequency * RunningTime);
+}
+
+float AItem::TransformCos()
+{
+	return Amplitude * FMath::Cos(Frequency * RunningTime);
+}
 
 void AItem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	RunningTime += DeltaTime; 
+	
+	// float DeltaZ = Amplitude * FMath::Sin(Frequency * RunningTime);
+	// AddActorWorldOffset(FVector(0.f, 0.f, DeltaZ));
 
+	DRAW_SPHERE_SINGLE_FRAME(GetActorLocation());
+	DRAW_VECTOR_SINGLE_FRAME(GetActorLocation(), GetActorLocation() + GetActorForwardVector() * 100.f);
 }
