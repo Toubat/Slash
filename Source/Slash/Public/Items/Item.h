@@ -30,7 +30,15 @@ protected:
 
 	UFUNCTION(BlueprintPure)
 	float TransformCos();
+
+	template<typename T>
+	T Avg(T first, T second);
+
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	float RunningTime;
+
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* ItemMesh;
 };
+
