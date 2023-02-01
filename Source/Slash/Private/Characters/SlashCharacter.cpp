@@ -90,7 +90,7 @@ void ASlashCharacter::Look(const FInputActionValue& Value)
 
 void ASlashCharacter::Jump(const FInputActionValue& Value)
 {
-	
+	Super::Jump();
 }
 
 void ASlashCharacter::Tick(float DeltaTime)
