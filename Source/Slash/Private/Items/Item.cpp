@@ -4,6 +4,7 @@
 #include "Items/Item.h"
 #include "Slash/DebugMacros.h"
 #include "Components/SphereComponent.h"
+#include "Characters/SlashCharacter.h"
 
 AItem::AItem()
 {
@@ -27,16 +28,19 @@ void AItem::BeginPlay()
 
 void AItem::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	const auto ActiorName = OtherActor->GetName();
-
-	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, ActiorName);
+	if (auto SlashCharacter = Cast<ASlashCharacter>(OtherActor)) {
+		SlashCharacter->SetOverlappingItem(this);
+	}
 }
 
 void AItem::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	const auto ActiorName = FString("Ending Overlap with: ") + OtherActor->GetName();
+	auto SlashCharacter = Cast<ASlashCharacter>(OtherActor);
 
-	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, ActiorName);
+	if (SlashCharacter && SlashCharacter->GetOverlappingItem() == this)
+	{
+		SlashCharacter->SetOverlappingItem(nullptr);
+	}
 }
 
 void AItem::Tick(float DeltaTime)
@@ -47,7 +51,7 @@ void AItem::Tick(float DeltaTime)
 	// rotate every frame
 	FRotator NewRotation = GetActorRotation();
 	NewRotation.Yaw += 100.f * DeltaTime;
-	SetActorRotation(NewRotation);
+	// SetActorRotation(NewRotation);
 }
 
 template<typename T>

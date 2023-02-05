@@ -5,13 +5,14 @@
 #include "Components/InputComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-
 #include "Camera/CameraComponent.h"
-
 #include "GroomComponent.h"
-
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+
+#include "Items/Item.h"
+#include "Items/Weapons/Weapon.h"
+
 
 ASlashCharacter::ASlashCharacter()
 {
@@ -93,6 +94,13 @@ void ASlashCharacter::Jump(const FInputActionValue& Value)
 	Super::Jump();
 }
 
+void ASlashCharacter::Equip(const FInputActionValue& Value)
+{
+	if (AWeapon* OverlappingWeapon = Cast<AWeapon>(GetOverlappingItem())) {
+		OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"));
+	}
+}
+
 void ASlashCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -108,6 +116,7 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(MovementAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Move);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Look);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Jump);
+		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Equip);
 	}
 }
 
