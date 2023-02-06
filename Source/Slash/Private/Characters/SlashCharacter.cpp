@@ -28,6 +28,7 @@ ASlashCharacter::ASlashCharacter()
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("Spring Arm"));
 	CameraBoom->SetupAttachment(GetRootComponent());
 	CameraBoom->TargetArmLength = 300.f;
+	CameraBoom->bUsePawnControlRotation = true;
 
 	ViewCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	ViewCamera->SetupAttachment(CameraBoom);
