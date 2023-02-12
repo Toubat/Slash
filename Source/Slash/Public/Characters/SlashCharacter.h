@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
 #include "CharacterTypes.h"
+#include "Containers/Deque.h"
 #include "SlashCharacter.generated.h"
 
 class UInputMappingContext;
@@ -14,7 +15,8 @@ class USpringArmComponent;
 class UCameraComponent;
 class UGroomComponent;
 class AItem;
-
+class UAnimMontage;
+class AWeapon;
 
 UCLASS()
 class SLASH_API ASlashCharacter : public ACharacter
@@ -33,12 +35,17 @@ public:
 
 	FORCEINLINE ECharacterState GetCharacterState() const { return CharacterState; }
 
+	FORCEINLINE AWeapon* GetEquippedWeapon() const { return EquippedWeapon; }
+
 	// Setters
 	FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }
 
 protected:
 	virtual void BeginPlay() override;
 
+	/**
+	 * Callbacks for input
+	 */
 	void Move(const FInputActionValue& Value);
 
 	void Look(const FInputActionValue& Value);
@@ -46,6 +53,30 @@ protected:
 	void Jump(const FInputActionValue& Value);
 
 	void Equip(const FInputActionValue& Value);
+
+	void Attack(const FInputActionValue& Value);
+
+	/**
+	 * Play Montage functions
+	 */
+	void PlayAttackMontage() const;
+
+	void PlayEquipMontage(const FName SectionName) const;
+
+	UFUNCTION(BlueprintCallable)
+	void OnAttackMontageEnd();
+
+	UFUNCTION(BlueprintCallable)
+	void OnEquipMontageEnd();
+
+	UFUNCTION(BlueprintCallable)
+	void OnUnEquipMontageEnd();
+
+	UFUNCTION(BlueprintCallable)
+	void OnWeaponArm();
+
+	UFUNCTION(BlueprintCallable)
+	void OnWeaponDisarm();
 
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputMappingContext* SlashContext;
@@ -62,9 +93,15 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputAction* EquipAction;
 
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputAction* AttackAction;
+	
 private:
 	UPROPERTY(VisibleAnywhere)
 	ECharacterState CharacterState = ECharacterState::ECS_Unequipped;
+
+	UPROPERTY(VisibleAnywhere)
+	EActionState ActionState = EActionState::EAS_Unoccupied;
 	
 	UPROPERTY(VisibleAnywhere)
 	USpringArmComponent* CameraBoom;
@@ -80,5 +117,16 @@ private:
 
 	UPROPERTY(VisibleInstanceOnly)
 	AItem* OverlappingItem;
-	
+
+	UPROPERTY(VisibleAnywhere, Category = Weapon)
+	AWeapon* EquippedWeapon;
+
+	/**
+	 * Animation montages
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = Montages)
+	UAnimMontage* AttackMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = Montages)
+	UAnimMontage* EquipMontage;
 };

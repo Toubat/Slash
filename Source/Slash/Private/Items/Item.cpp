@@ -5,6 +5,7 @@
 #include "Slash/DebugMacros.h"
 #include "Components/SphereComponent.h"
 #include "Characters/SlashCharacter.h"
+#include "Characters/HuTao.h"
 
 AItem::AItem()
 {
@@ -26,16 +27,26 @@ void AItem::BeginPlay()
 	Sphere->OnComponentEndOverlap.AddDynamic(this, &AItem::OnSphereEndOverlap);
 }
 
-void AItem::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AItem::OnSphereBeginOverlap(
+	UPrimitiveComponent* OverlappedComponent,
+	AActor* OtherActor,
+	UPrimitiveComponent* OtherComp,
+	int32 OtherBodyIndex,
+	bool bFromSweep,
+	const FHitResult& SweepResult)
 {
-	if (auto SlashCharacter = Cast<ASlashCharacter>(OtherActor)) {
+	if (const auto SlashCharacter = Cast<ASlashCharacter>(OtherActor)) {
 		SlashCharacter->SetOverlappingItem(this);
-	}
+	} 
 }
 
-void AItem::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+void AItem::OnSphereEndOverlap(
+	UPrimitiveComponent* OverlappedComponent,
+	AActor* OtherActor,
+	UPrimitiveComponent* OtherComp,
+	int32 OtherBodyIndex)
 {
-	auto SlashCharacter = Cast<ASlashCharacter>(OtherActor);
+	const auto SlashCharacter = Cast<ASlashCharacter>(OtherActor);
 
 	if (SlashCharacter && SlashCharacter->GetOverlappingItem() == this)
 	{
@@ -47,17 +58,11 @@ void AItem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	RunningTime += DeltaTime; 
-	
-	// rotate every frame
-	FRotator NewRotation = GetActorRotation();
-	NewRotation.Yaw += 100.f * DeltaTime;
-	// SetActorRotation(NewRotation);
-}
 
-template<typename T>
-inline T AItem::Avg(T first, T second)
-{
-	return (first + second) / 2;
+	if (ItemState == EItemState::EIS_Hovering)
+	{
+		AddActorWorldOffset(FVector(0.f, 0.f, TransformSin()));
+	}
 }
 
 float AItem::TransformSin()
