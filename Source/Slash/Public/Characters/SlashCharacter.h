@@ -40,6 +40,9 @@ public:
 	// Setters
 	FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }
 
+	UFUNCTION(BlueprintCallable)
+	void SetWeaponCollisionEnabled(const ECollisionEnabled::Type CollisionEnabled);
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -61,7 +64,7 @@ protected:
 	 */
 	void PlayAttackMontage() const;
 
-	void PlayEquipMontage(const FName SectionName) const;
+	void PlayEquipMontage(const FName& SectionName) const;
 
 	UFUNCTION(BlueprintCallable)
 	void OnAttackMontageEnd();

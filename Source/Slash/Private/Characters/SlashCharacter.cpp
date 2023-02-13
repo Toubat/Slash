@@ -3,6 +3,7 @@
 
 #include "Characters/SlashCharacter.h"
 #include "Components/InputComponent.h"
+#include "Components/BoxComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
@@ -13,6 +14,7 @@
 #include "Items/Item.h"
 #include "Items/Weapons/Weapon.h"
 #include "Animation/AnimMontage.h"
+#include "Components/BoxComponent.h"
 
 
 ASlashCharacter::ASlashCharacter()
@@ -56,7 +58,15 @@ void ASlashCharacter::BeginPlay()
 			Subsystem->AddMappingContext(SlashContext, 0);
 		}
 	}
-	
+}
+
+void ASlashCharacter::SetWeaponCollisionEnabled(const ECollisionEnabled::Type CollisionEnabled)
+{
+	if (EquippedWeapon && EquippedWeapon->GetWeaponBox())
+	{
+		EquippedWeapon->GetWeaponBox()->SetCollisionEnabled(CollisionEnabled);
+		EquippedWeapon->IgnoredActors.Empty();
+	}
 }
 
 void ASlashCharacter::Move(const FInputActionValue& Value)
@@ -121,11 +131,9 @@ void ASlashCharacter::Equip(const FInputActionValue& Value)
 		ActionState = EActionState::EAS_Equipping;
 	} else if (AWeapon* OverlappingWeapon = Cast<AWeapon>(GetOverlappingItem())) {
 		CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
-		ActionState = EActionState::EAS_Equipping;
 		OverlappingItem = nullptr;
 		EquippedWeapon = OverlappingWeapon;
 		OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"));
-		ActionState = EActionState::EAS_Unoccupied;
 	} 
 }
 
@@ -154,7 +162,7 @@ void ASlashCharacter::PlayAttackMontage() const
 	}
 }
 
-void ASlashCharacter::PlayEquipMontage(const FName SectionName) const
+void ASlashCharacter::PlayEquipMontage(const FName& SectionName) const
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && EquipMontage)
