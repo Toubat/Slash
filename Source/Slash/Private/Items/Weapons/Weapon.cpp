@@ -68,17 +68,19 @@ void AWeapon::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 		ETraceTypeQuery::TraceTypeQuery1,
 		false,
 		IgnoredActors,
-		EDrawDebugTrace::ForDuration,
+		EDrawDebugTrace::None,
 		BoxHit,
 		true
 	);
 
 	if (AActor* HitActor = BoxHit.GetActor())
 	{
-		IHitInterface* HitInterface = Cast<IHitInterface>(HitActor);
+		CreateFields(BoxHit.ImpactPoint);
+		
+		const IHitInterface* HitInterface = Cast<IHitInterface>(HitActor);
 		if (!HitInterface) return;
 
 		IgnoredActors.AddUnique(HitActor);
-		HitInterface->GetHit(BoxHit.ImpactPoint);
+		HitInterface->Execute_GetHit(BoxHit.GetActor(), BoxHit.ImpactPoint);
 	}
 }
