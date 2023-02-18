@@ -6,6 +6,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
+#include "Characters/SlashCharacter.h"
 #include "Components/AttributeComponent.h"
 #include "Components/WidgetComponent.h"
 #include "HUD/HealthBarComponent.h"
@@ -39,7 +40,8 @@ void AEnemy::BeginPlay()
 
 	if (HealthBarWidget)
 	{
-		HealthBarWidget->SetHealthPercent(1.f);
+		HealthBarWidget->SetHealthPercent(AttributeComponent->GetHealthPercent());
+		HealthBarWidget->SetVisibility(false);
 	}
 }
 
@@ -55,19 +57,16 @@ void AEnemy::PlayHitReactMontage(const FName& SectionName)
 
 void AEnemy::PlayDeathMontage()
 {
-	TArray<FName> Sections = {
-		TEXT("Death1"),
-		TEXT("Death2"),
-		TEXT("Death3"),
-		TEXT("Death4"),
-		TEXT("Death5"),
-	};
-
+	TArray<FName> Sections = { TEXT("Death1"), TEXT("Death2"), TEXT("Death3"), TEXT("Death4"), TEXT("Death5")};
+	TArray<EDeathPose> DeathPoses = {EDeathPose::EDP_Death_1, EDeathPose::EDP_Death_2, EDeathPose::EDP_Death_3, EDeathPose::EDP_Death_4, EDeathPose::EDP_Death_5};
+	
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && DeathMontage)
 	{
+		const int32 Idx = FMath::RandRange(0, Sections.Num() - 1);
 		AnimInstance->Montage_Play(DeathMontage);
-		AnimInstance->Montage_JumpToSection(Sections[FMath::RandRange(0, Sections.Num() - 1)], DeathMontage);
+		AnimInstance->Montage_JumpToSection(Sections[Idx], DeathMontage);
+		DeathPose = DeathPoses[Idx];
 	}
 }
 
@@ -75,6 +74,16 @@ void AEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	for (AActor* CombatTarget : CombatTargets) {
+		if (CombatTarget == nullptr) continue;
+		if (!Cast<ASlashCharacter>(CombatTarget)) continue;
+		
+		const double DistToTarget = (CombatTarget->GetActorLocation() - GetActorLocation()).Size();
+		if (DistToTarget > CombatRadius) {
+			CombatTarget = nullptr;
+			if (HealthBarWidget) HealthBarWidget->SetVisibility(false);
+		}
+	}
 }
 
 void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -86,6 +95,7 @@ void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 void AEnemy::GetHit_Implementation(const FVector& ImpactPoint)
 {
 	// DRAW_SPHERE_COLOR(ImpactPoint, FColor::Orange);
+	if (HealthBarWidget) HealthBarWidget->SetVisibility(true);
 
 	const FVector ImpactLowered(ImpactPoint.X, ImpactPoint.Y, GetActorLocation().Z);
 	const FVector ToHit = FVector(ImpactLowered - GetActorLocation()).GetSafeNormal();
@@ -112,13 +122,15 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint)
 		SectionName = FName("FromBack");
 	}
 
-	if (AttributeComponent && AttributeComponent->IsAlive())
-	{
+	if (AttributeComponent && AttributeComponent->IsAlive()) {
 		PlayHitReactMontage(SectionName);
-	} else
-	{
+	} else {
 		PlayDeathMontage();
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		SetLifeSpan(5.f);
+		if (HealthBarWidget) HealthBarWidget->SetVisibility(false);
 	}
+	
 	if (HitSound) UGameplayStatics::PlaySoundAtLocation(this, HitSound, ImpactPoint);
 	if (HitParticles) UGameplayStatics::SpawnEmitterAtLocation(this, HitParticles, ImpactPoint);
 	
@@ -129,12 +141,12 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint)
 float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
 	AActor* DamageCauser)
 {
-	if (AttributeComponent && HealthBarWidget)
-	{
+	if (AttributeComponent && HealthBarWidget) {
 		AttributeComponent->ReceiveDamage(DamageAmount);
 		HealthBarWidget->SetHealthPercent(AttributeComponent->GetHealthPercent());
 	}
-
+	
+	CombatTargets.AddUnique(EventInstigator->GetPawn());
 	return DamageAmount;
 }
 

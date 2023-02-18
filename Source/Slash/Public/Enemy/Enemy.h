@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Characters/CharacterTypes.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/HitInterface.h"
 #include "Enemy.generated.h"
@@ -39,6 +40,9 @@ protected:
 
 	UFUNCTION()
 	void PlayDeathMontage();
+
+	UPROPERTY(BlueprintReadOnly)
+	EDeathPose DeathPose = EDeathPose::EDP_Alive;
 	
 private:
 	UPROPERTY(VisibleAnywhere)
@@ -61,4 +65,10 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = VisualEffects)
 	UParticleSystem* HitParticles;
+
+	UPROPERTY(VisibleAnywhere)
+	TArray<AActor*> CombatTargets;
+
+	UPROPERTY(EditAnywhere)
+	double CombatRadius = 500.0;
 };
