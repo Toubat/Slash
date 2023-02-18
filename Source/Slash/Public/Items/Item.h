@@ -7,6 +7,7 @@
 #include "Item.generated.h"
 
 class USphereComponent;
+class UNiagaraComponent;
 
 UENUM(BlueprintType)
 enum class EItemState : uint8
@@ -51,6 +52,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UStaticMeshComponent* ItemMesh;
+
+	UPROPERTY(EditAnywhere)
+	UNiagaraComponent* EmbersEffect;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	EItemState ItemState = EItemState::EIS_Hovering;

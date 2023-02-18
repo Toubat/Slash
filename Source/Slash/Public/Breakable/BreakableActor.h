@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Interfaces/HitInterface.h"
+#include "Chaos/ChaosGameplayEventDispatcher.h"
 #include "BreakableActor.generated.h"
 
 class UCapsuleComponent;
@@ -23,14 +24,20 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void GetHit_Implementation(const FVector& ImpactPoint) override;
+
+	UFUNCTION()
+	virtual void OnBreak(const FChaosBreakEvent& BreakEvent);
 	
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	UCapsuleComponent* Capsule;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UCapsuleComponent* Capsule;
+	
 private:
+	bool bIsBroken = false;
+	
 	UPROPERTY(VisibleAnywhere)
 	UGeometryCollectionComponent* GeometryCollection;
 
@@ -38,5 +45,5 @@ private:
 	USoundBase* HitSound;
 
 	UPROPERTY(EditAnywhere, Category = Treasure)
-	TSubclassOf<ATreasure> TreasureClass;
+	TArray<TSubclassOf<ATreasure>> TreasureClasses;
 };

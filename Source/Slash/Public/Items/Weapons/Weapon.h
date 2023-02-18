@@ -22,7 +22,7 @@ public:
 
 	void AttachToSocket(USceneComponent* InParent, FName InSocketName);
 
-	void Equip(USceneComponent* InParent, FName InSocketName);
+	void Equip(USceneComponent* InParent, FName InSocketName, AActor* NewOwner, APawn* NewInstigator);
 
 	TArray<AActor*> IgnoredActors;
 
@@ -40,6 +40,9 @@ protected:
     void CreateFields(const FVector& FieldLocation);
 
 private:
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	float Damage = 20.f;
+	
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	USoundBase* EquipSound;
 

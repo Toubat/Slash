@@ -91,7 +91,7 @@ void AHuTao::Jump(const FInputActionValue& Value)
 void AHuTao::Equip(const FInputActionValue& Value)
 {
 	if (AWeapon* OverlappingWeapon = Cast<AWeapon>(GetOverlappingItem())) {
-		OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"));
+		OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
 		CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
 	}
 }

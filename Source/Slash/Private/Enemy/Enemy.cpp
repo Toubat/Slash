@@ -6,26 +6,41 @@
 #include "Components/CapsuleComponent.h"
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
+#include "Components/AttributeComponent.h"
+#include "Components/WidgetComponent.h"
+#include "HUD/HealthBarComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "Slash/DebugMacros.h"
 
 AEnemy::AEnemy()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	// Skeletal mesh component
 	GetMesh()->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetGenerateOverlapEvents(true);
 
+	// Capsule component
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+
+	// Attribute component
+	AttributeComponent = CreateDefaultSubobject<UAttributeComponent>(TEXT("Attribute Component"));
+
+	// Widget component
+	HealthBarWidget = CreateDefaultSubobject<UHealthBarComponent>(TEXT("Health Bar"));
+	HealthBarWidget->SetupAttachment(GetRootComponent());
 }
 
 void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	if (HealthBarWidget)
+	{
+		HealthBarWidget->SetHealthPercent(1.f);
+	}
 }
 
 void AEnemy::PlayHitReactMontage(const FName& SectionName)
@@ -35,6 +50,24 @@ void AEnemy::PlayHitReactMontage(const FName& SectionName)
 	{
 		AnimInstance->Montage_Play(HitReactMontage);
 		AnimInstance->Montage_JumpToSection(SectionName, HitReactMontage);
+	}
+}
+
+void AEnemy::PlayDeathMontage()
+{
+	TArray<FName> Sections = {
+		TEXT("Death1"),
+		TEXT("Death2"),
+		TEXT("Death3"),
+		TEXT("Death4"),
+		TEXT("Death5"),
+	};
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && DeathMontage)
+	{
+		AnimInstance->Montage_Play(DeathMontage);
+		AnimInstance->Montage_JumpToSection(Sections[FMath::RandRange(0, Sections.Num() - 1)], DeathMontage);
 	}
 }
 
@@ -79,11 +112,29 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint)
 		SectionName = FName("FromBack");
 	}
 
-	PlayHitReactMontage(SectionName);
+	if (AttributeComponent && AttributeComponent->IsAlive())
+	{
+		PlayHitReactMontage(SectionName);
+	} else
+	{
+		PlayDeathMontage();
+	}
 	if (HitSound) UGameplayStatics::PlaySoundAtLocation(this, HitSound, ImpactPoint);
 	if (HitParticles) UGameplayStatics::SpawnEmitterAtLocation(this, HitParticles, ImpactPoint);
 	
 	// UKismetSystemLibrary::DrawDebugArrow(this, GetActorLocation(), GetActorLocation() + GetActorForwardVector() * 60.f, 5.f, FColor::Red, 5.f, 1.f);
 	// UKismetSystemLibrary::DrawDebugArrow(this, GetActorLocation(), GetActorLocation() + ToHit * 60.f, 5.f, FColor::Green, 5.f, 1.f);
+}
+
+float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
+	AActor* DamageCauser)
+{
+	if (AttributeComponent && HealthBarWidget)
+	{
+		AttributeComponent->ReceiveDamage(DamageAmount);
+		HealthBarWidget->SetHealthPercent(AttributeComponent->GetHealthPercent());
+	}
+
+	return DamageAmount;
 }
 
