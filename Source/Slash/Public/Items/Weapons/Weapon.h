@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Characters/CharacterTypes.h"
 #include "Items/Item.h"
 #include "Weapon.generated.h"
 
@@ -55,6 +56,11 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	USceneComponent* BoxTraceEnd;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon Properties")
+	ECharacterState EquipState = ECharacterState::ECS_EquippedOneHandedWeapon;
+
 public:
 	FORCEINLINE UBoxComponent* GetWeaponBox() const { return WeaponBox; }
+
+	FORCEINLINE ECharacterState GetEquipState() const { return EquipState; }
 };

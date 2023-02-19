@@ -60,6 +60,30 @@ void ASlashCharacter::BeginPlay()
 	}
 }
 
+FName ASlashCharacter::GetHandSocketName(const ECharacterState State) const
+{
+	switch (State) {
+	case ECharacterState::ECS_EquippedOneHandedWeapon:
+		return FName("RightHandSocket");
+	case ECharacterState::ECS_EquippedTwoHandedWeapon:
+		return FName("TwoHandedSocket");
+	default:
+		return FName("RightHandSocket");
+	}
+}
+
+FName ASlashCharacter::GetSpineSocketName(const ECharacterState State) const
+{
+	switch (State) {
+	case ECharacterState::ECS_EquippedOneHandedWeapon:
+		return FName("SpineSocket");
+	case ECharacterState::ECS_EquippedTwoHandedWeapon:
+		return FName("SpineSocketAxe");
+	default:
+		return FName("SpineSocket");
+	}
+}
+
 void ASlashCharacter::SetWeaponCollisionEnabled(const ECollisionEnabled::Type CollisionEnabled)
 {
 	if (EquippedWeapon && EquippedWeapon->GetWeaponBox())
@@ -127,13 +151,13 @@ void ASlashCharacter::Equip(const FInputActionValue& Value)
 		PlayEquipMontage(FName("Unequip"));
 	} else if (CanArm) {
 		PlayEquipMontage(FName("Equip"));
-		CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
+		CharacterState = EquippedWeapon->GetEquipState();
 		ActionState = EActionState::EAS_Equipping;
 	} else if (AWeapon* OverlappingWeapon = Cast<AWeapon>(GetOverlappingItem())) {
-		CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
 		OverlappingItem = nullptr;
 		EquippedWeapon = OverlappingWeapon;
-		OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
+		CharacterState = EquippedWeapon->GetEquipState();
+		OverlappingWeapon->Equip(GetMesh(), GetHandSocketName(CharacterState), this, this);
 	} 
 }
 
@@ -189,12 +213,12 @@ void ASlashCharacter::OnUnEquipMontageEnd()
 
 void ASlashCharacter::OnWeaponArm()
 {
-	if (EquippedWeapon) EquippedWeapon->AttachToSocket(GetMesh(), FName("RightHandSocket"));
+	if (EquippedWeapon) EquippedWeapon->AttachToSocket(GetMesh(), GetHandSocketName(EquippedWeapon->GetEquipState()));
 }
 
 void ASlashCharacter::OnWeaponDisarm()
 {
-	if (EquippedWeapon) EquippedWeapon->AttachToSocket(GetMesh(), FName("SpineSocket"));
+	if (EquippedWeapon) EquippedWeapon->AttachToSocket(GetMesh(), GetSpineSocketName(EquippedWeapon->GetEquipState()));
 }
 
 void ASlashCharacter::Tick(float DeltaTime)

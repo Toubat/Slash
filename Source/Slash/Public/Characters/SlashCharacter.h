@@ -46,6 +46,10 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	FName GetHandSocketName(const ECharacterState State) const;
+
+	FName GetSpineSocketName(const ECharacterState State) const;
+
 	/**
 	 * Callbacks for input
 	 */
