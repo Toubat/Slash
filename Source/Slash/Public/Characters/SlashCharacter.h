@@ -46,10 +46,6 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	FName GetHandSocketName(const ECharacterState State) const;
-
-	FName GetSpineSocketName(const ECharacterState State) const;
-
 	/**
 	 * Callbacks for input
 	 */
@@ -132,8 +128,11 @@ private:
 	 * Animation montages
 	 */
 	UPROPERTY(EditDefaultsOnly, Category = Montages)
-	UAnimMontage* AttackMontage;
+	UAnimMontage* AttackMontage_OneHand;
 
+	UPROPERTY(EditDefaultsOnly, Category = Montages)
+	UAnimMontage* AttackMontage_TwoHand;
+	
 	UPROPERTY(EditDefaultsOnly, Category = Montages)
 	UAnimMontage* EquipMontage;
 };
