@@ -8,6 +8,7 @@
 #include "Interfaces/HitInterface.h"
 #include "Enemy.generated.h"
 
+class UPawnSensingComponent;
 class UHealthBarComponent;
 class UAttributeComponent;
 class UAnimMontage;
@@ -36,20 +37,35 @@ protected:
 	 * Play montage functions
 	 */
 	UFUNCTION()
-	void PlayHitReactMontage(const FName& SectionName);
+	void PlayHitReactMontage(const FName& SectionName) const;
 
 	UFUNCTION()
 	void PlayDeathMontage();
+
+	UFUNCTION()
+	void OnPawnSeen(APawn* SeenPawn);
+
+	bool InTargetRange(const AActor* Target, const double Radius) const;
+
+	void MoveToTarget(const AActor* Target) const;
+
+	void ChoosePatrolTarget();
 
 	UPROPERTY(BlueprintReadOnly)
 	EDeathPose DeathPose = EDeathPose::EDP_Alive;
 	
 private:
+	/**
+	 * Components
+	 */
 	UPROPERTY(VisibleAnywhere)
 	UAttributeComponent* AttributeComponent;
 
 	UPROPERTY(VisibleAnywhere)
 	UHealthBarComponent* HealthBarWidget;
+
+	UPROPERTY(VisibleAnywhere)
+	UPawnSensingComponent* PawnSensing;
 	
 	/**
 	 * Animation Montages
@@ -67,8 +83,32 @@ private:
 	UParticleSystem* HitParticles;
 
 	UPROPERTY(VisibleAnywhere)
-	TArray<AActor*> CombatTargets;
+	AActor* CombatTarget;
 
 	UPROPERTY(EditAnywhere)
-	double CombatRadius = 500.0;
+	double CombatRadius = 1000.f;
+
+	UPROPERTY(EditAnywhere)
+	double PatrolRadius = 200.f;
+
+	UPROPERTY(EditAnywhere)
+	double AttackRadius = 150.f;
+
+	/**
+	 * Navigation
+	 */
+	UPROPERTY()
+	class AAIController* EnemyController;
+	
+	UPROPERTY(EditAnywhere, Category = "AI Navigation")
+	AActor* PatrolTarget;
+
+	UPROPERTY(EditAnywhere, Category = "AI Navigation")
+	TArray<AActor*> PatrolTargets;
+
+	FTimerHandle PatrolTimer;
+
+	EEnemyState EnemyState = EEnemyState::EES_Patrolling;
+
+	void PatrolTimerFinished() const;
 };
