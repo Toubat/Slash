@@ -11,6 +11,7 @@ void USLashAnimInstance::NativeInitializeAnimation()
 	Super::NativeInitializeAnimation();
 	
 	SlashCharacter = Cast<ASlashCharacter>(TryGetPawnOwner());
+	BaseCharacter = Cast<ABaseCharacter>(TryGetPawnOwner());
 	if (SlashCharacter)
 	{
 		SlashCharacterMovement = SlashCharacter->GetCharacterMovement();

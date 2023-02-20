@@ -16,7 +16,6 @@ class UCameraComponent;
 class UGroomComponent;
 class AItem;
 class UAnimMontage;
-class AWeapon;
 
 UCLASS()
 class SLASH_API ASlashCharacter : public ABaseCharacter
@@ -61,12 +60,11 @@ protected:
 	/**
 	 * Play Montage functions
 	 */
-	void PlayAttackMontage() const;
+	virtual void PlayAttackMontage() const override;
+
+	virtual void OnAttackMontageEnd() override;
 
 	void PlayEquipMontage(const FName& SectionName) const;
-
-	UFUNCTION(BlueprintCallable)
-	void OnAttackMontageEnd();
 
 	UFUNCTION(BlueprintCallable)
 	void OnEquipMontageEnd();
@@ -119,15 +117,6 @@ private:
 
 	UPROPERTY(VisibleInstanceOnly)
 	AItem* OverlappingItem;
-
-	/**
-	 * Animation montages
-	 */
-	UPROPERTY(EditDefaultsOnly, Category = Montages)
-	UAnimMontage* AttackMontage_OneHand;
-
-	UPROPERTY(EditDefaultsOnly, Category = Montages)
-	UAnimMontage* AttackMontage_TwoHand;
 	
 	UPROPERTY(EditDefaultsOnly, Category = Montages)
 	UAnimMontage* EquipMontage;

@@ -7,6 +7,7 @@
 #include "CharacterTypes.h"
 #include "SLashAnimInstance.generated.h"
 
+class ABaseCharacter;
 class ASlashCharacter;
 class UCharacterMovementComponent;
 
@@ -22,6 +23,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 	ASlashCharacter* SlashCharacter;
+
+	UPROPERTY(BlueprintReadOnly)
+	ABaseCharacter* BaseCharacter;
 
 	UPROPERTY(BlueprintReadOnly, Category = Movement)
 	UCharacterMovementComponent* SlashCharacterMovement;
