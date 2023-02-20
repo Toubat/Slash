@@ -3,14 +3,13 @@
 
 #include "Characters/SlashCharacter.h"
 #include "Components/InputComponent.h"
-#include "Components/BoxComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GroomComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-
+#include "Kismet/GameplayStatics.h"
 #include "Items/Item.h"
 #include "Items/Weapons/Weapon.h"
 #include "Animation/AnimMontage.h"
@@ -133,25 +132,12 @@ void ASlashCharacter::PlayAttackMontage() const
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	UAnimMontage* AttackMontage = EquippedWeapon->GetEquipState() == ECharacterState::ECS_EquippedOneHandedWeapon ? AttackMontage_OneHand : AttackMontage_TwoHand;
+	TArray<FName> Sections = { TEXT("Attack1"), TEXT("Attack2") };
 	
 	if (AnimInstance && AttackMontage)
 	{
 		AnimInstance->Montage_Play(AttackMontage);
-		const int32 Selection = FMath::RandRange(0, 1);
-		FName SectionName;
-
-		switch (Selection)
-		{
-		case 0:
-			SectionName = FName("Attack1");
-			break;
-		case 1:
-			SectionName = FName("Attack2");
-			break;
-		default:
-			break;
-		}
-
+		const FName SectionName = Sections[FMath::RandRange(0, Sections.Num() - 1)];
 		AnimInstance->Montage_JumpToSection(SectionName, AttackMontage);
 	}
 }
@@ -208,5 +194,13 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Equip);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Attack);
 	}
+}
+
+void ASlashCharacter::GetHit_Implementation(const FVector& ImpactPoint)
+{
+	Super::GetHit_Implementation(ImpactPoint);
+
+	if (HitSound) UGameplayStatics::PlaySoundAtLocation(this, HitSound, ImpactPoint);
+	if (HitParticles) UGameplayStatics::SpawnEmitterAtLocation(this, HitParticles, ImpactPoint);
 }
 

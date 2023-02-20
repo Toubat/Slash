@@ -6,6 +6,7 @@
 #include "Items/Weapons/Weapon.h"
 #include "Animation/AnimMontage.h"
 #include "Components/AttributeComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ABaseCharacter::ABaseCharacter()
@@ -65,6 +66,15 @@ void ABaseCharacter::SetWeaponCollisionEnabled(const ECollisionEnabled::Type Col
 		EquippedWeapon->GetWeaponBox()->SetCollisionEnabled(CollisionEnabled);
 		EquippedWeapon->IgnoredActors.Empty();
 	}
+}
+
+float ABaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
+	AActor* DamageCauser)
+{
+	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	if (AttributeComponent) AttributeComponent->ReceiveDamage(DamageAmount);
+	return DamageAmount;
 }
 
 void ABaseCharacter::PlayAttackMontage() const

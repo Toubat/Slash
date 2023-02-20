@@ -29,6 +29,8 @@ public:
 	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	virtual void GetHit_Implementation(const FVector& ImpactPoint) override;
+
 	// Getters
 	FORCEINLINE AItem* GetOverlappingItem() const { return OverlappingItem; }
 
@@ -38,8 +40,6 @@ public:
 
 	// Setters
 	FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }
-
-	
 
 protected:
 	virtual void BeginPlay() override;

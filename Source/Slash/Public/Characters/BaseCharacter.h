@@ -26,6 +26,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetWeaponCollisionEnabled(const ECollisionEnabled::Type CollisionEnabled);
+	
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 	/**
 	 * Play Montage functions

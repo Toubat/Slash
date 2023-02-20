@@ -19,22 +19,32 @@ class SLASH_API AEnemy : public ABaseCharacter
 
 public:
 	AEnemy();
+	void HideHealthBar();
 
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	
+	void ShowHealthBar();
+
 	virtual void GetHit_Implementation(const FVector& ImpactPoint) override;
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
+	virtual void Destroyed() override;
 	
 protected:
 	virtual void BeginPlay() override;
+
+	void Attack();
 
 	/**
 	 * Play montage functions
 	 */
 	virtual void PlayDeathMontage() override;
+
+	virtual void PlayAttackMontage() const override;
+
+	virtual void OnAttackMontageEnd() override;
 
 	UFUNCTION()
 	void OnPawnSeen(APawn* SeenPawn);
@@ -46,9 +56,14 @@ protected:
 	void ChoosePatrolTarget();
 
 	UPROPERTY(BlueprintReadOnly)
-	EDeathPose DeathPose = EDeathPose::EDP_Alive;
+	EDeathPose DeathPose;
+
+	UPROPERTY(BlueprintReadOnly)
+	EEnemyState EnemyState = EEnemyState::EES_Patrolling;
 	
 private:
+	void PatrolTimerFinished() const;
+
 	/**
 	 * Components
 	 */
@@ -58,8 +73,18 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	UPawnSensingComponent* PawnSensing;
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class AWeapon> WeaponClass;
+
+	/**
+	 * Combat
+	 */
 	UPROPERTY(VisibleAnywhere)
 	AActor* CombatTarget;
+
+	FTimerHandle PatrolTimer;
+
+	FTimerHandle AttackTimer;
 
 	UPROPERTY(EditAnywhere)
 	double CombatRadius = 1000.f;
@@ -69,6 +94,18 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	double AttackRadius = 150.f;
+	
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float PatrollingSpeed = 125.f;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float ChasingSpeed = 300.f;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float AttackMin = 0.1f;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float AttackMax = 0.5f;
 
 	/**
 	 * Navigation
@@ -81,10 +118,4 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "AI Navigation")
 	TArray<AActor*> PatrolTargets;
-
-	FTimerHandle PatrolTimer;
-
-	EEnemyState EnemyState = EEnemyState::EES_Patrolling;
-
-	void PatrolTimerFinished() const;
 };
