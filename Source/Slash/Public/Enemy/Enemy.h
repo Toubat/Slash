@@ -46,6 +46,9 @@ protected:
 
 	virtual void OnAttackMontageEnd() override;
 
+	UFUNCTION(BlueprintCallable)
+	void OnHitReactMontageEnd();
+
 	UFUNCTION()
 	void OnPawnSeen(APawn* SeenPawn);
 
@@ -84,8 +87,6 @@ private:
 
 	FTimerHandle PatrolTimer;
 
-	FTimerHandle AttackTimer;
-
 	UPROPERTY(EditAnywhere)
 	double CombatRadius = 1000.f;
 
@@ -100,12 +101,6 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	float ChasingSpeed = 300.f;
-
-	UPROPERTY(EditAnywhere, Category = Combat)
-	float AttackMin = 0.1f;
-
-	UPROPERTY(EditAnywhere, Category = Combat)
-	float AttackMax = 0.5f;
 
 	/**
 	 * Navigation

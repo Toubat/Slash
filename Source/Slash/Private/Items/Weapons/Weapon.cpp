@@ -9,6 +9,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/BoxComponent.h"
 #include "Interfaces/HitInterface.h"
+#include "Slash/DebugMacros.h"
 
 AWeapon::AWeapon()
 {
@@ -60,10 +61,18 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	Super::OnSphereEndOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex);
 }
 
-void AWeapon::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+bool AWeapon::AreBothEnemies(const AActor* OtherActor) const
 {
+	return GetOwner()->ActorHasTag("Enemy") && OtherActor->ActorHasTag("Enemy");
+}
+
+void AWeapon::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+                                UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (AreBothEnemies(OtherActor)) return;
+	
 	FHitResult BoxHit;
+	IgnoredActors.AddUnique(GetOwner());
 	UKismetSystemLibrary::BoxTraceSingle(
 		this,
 		BoxTraceStart->GetComponentLocation(),
@@ -78,14 +87,17 @@ void AWeapon::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 		true
 	);
 
-	if (AActor* HitActor = BoxHit.GetActor())
-	{
+	// PRINT(OtherActor->GetName());
+	if (AActor* HitActor = BoxHit.GetActor(); HitActor && !AreBothEnemies(HitActor)) {
+
+		PRINT(HitActor->GetName());
 		const IHitInterface* HitInterface = Cast<IHitInterface>(HitActor);
 		if (!HitInterface) return;
 
 		CreateFields(BoxHit.ImpactPoint);
 		IgnoredActors.AddUnique(HitActor);
-		
+
+		PRINT(HitActor->GetName());
 		UGameplayStatics::ApplyDamage(
 			BoxHit.GetActor(),
 			Damage,

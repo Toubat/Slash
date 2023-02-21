@@ -59,24 +59,24 @@ void AEnemy::Tick(float DeltaTime)
 
 	if (EnemyState == EEnemyState::EES_Dead) return;
 	if (EnemyState == EEnemyState::EES_Attacking) return;
+	if (EnemyState == EEnemyState::EES_GetHit) return;
 	
 	if (CombatTarget) {
 		if (InTargetRange(CombatTarget, AttackRadius)) {
 			// Inside attack radius, attack player
 			if (EnemyState == EEnemyState::EES_Attacking) return;
 
-			GetWorldTimerManager().ClearTimer(AttackTimer);
 			EnemyState = EEnemyState::EES_Attacking;
-			const float AttackTime = FMath::RandRange(AttackMin, AttackMax);
-			GetWorldTimerManager().SetTimer(AttackTimer, this, &AEnemy::Attack, AttackTime);
+			GetCharacterMovement()->MaxWalkSpeed = 0.f;
+			Attack();
 		} else if (InTargetRange(CombatTarget, CombatRadius)) {
 			// Inside combat radius, but outside attack radius, chase player
 			if (EnemyState == EEnemyState::EES_Chasing) return;
 
+			PRINT(TEXT("Lose interest"));
 			EnemyState = EEnemyState::EES_Chasing;
 			GetCharacterMovement()->MaxWalkSpeed = ChasingSpeed;
 			MoveToTarget(CombatTarget);
-			GetWorldTimerManager().ClearTimer(AttackTimer);
 		} else {
 			// Outside combat radius, lose interest
 			if (EnemyState == EEnemyState::EES_Patrolling) return;
@@ -87,7 +87,6 @@ void AEnemy::Tick(float DeltaTime)
 			GetCharacterMovement()->MaxWalkSpeed = PatrollingSpeed;
 			ChoosePatrolTarget();
 			MoveToTarget(PatrolTarget);
-			GetWorldTimerManager().ClearTimer(AttackTimer);
 		}
 	} else if (!PatrolTarget || InTargetRange(PatrolTarget, PatrolRadius)) {
 		// choose next patrol target if inside acceptable radius of current target
@@ -141,6 +140,8 @@ void AEnemy::BeginPlay()
 		if (DefaultWeapon) DefaultWeapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
 		EquippedWeapon = DefaultWeapon;
 	}
+	
+	Tags.Add("Enemy");
 }
 
 void AEnemy::Attack() 
@@ -182,6 +183,11 @@ void AEnemy::OnAttackMontageEnd()
 	EnemyState = EEnemyState::EES_Engaged;
 }
 
+void AEnemy::OnHitReactMontageEnd()
+{
+	EnemyState = EEnemyState::EES_Engaged;
+}
+
 void AEnemy::OnPawnSeen(APawn* SeenPawn)
 {
 	if (EnemyState != EEnemyState::EES_Patrolling) return;
@@ -215,13 +221,16 @@ void AEnemy::ShowHealthBar()
 void AEnemy::GetHit_Implementation(const FVector& ImpactPoint)
 {
 	// DRAW_SPHERE_COLOR(ImpactPoint, FColor::Orange);
+	if (EnemyState == EEnemyState::EES_Dead) return;
 	ShowHealthBar();
 
 	const FName SectionName = DirectionalHitReact(ImpactPoint);
 
 	if (AttributeComponent && AttributeComponent->IsAlive()) {
+		EnemyState = EEnemyState::EES_GetHit;
 		PlayHitReactMontage(SectionName);
 	} else {
+		EnemyState = EEnemyState::EES_Dead;
 		PlayDeathMontage();
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		SetLifeSpan(5.f);
