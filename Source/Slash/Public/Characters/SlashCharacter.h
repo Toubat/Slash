@@ -66,6 +66,10 @@ protected:
 
 	void PlayEquipMontage(const FName& SectionName) const;
 
+	virtual void PlayHitReactMontage(const FName& SectionName) const override;
+
+	virtual void OnHitReactMontageEnd() override;
+
 	UFUNCTION(BlueprintCallable)
 	void OnEquipMontageEnd();
 

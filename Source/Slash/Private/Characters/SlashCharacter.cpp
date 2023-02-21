@@ -70,12 +70,7 @@ void ASlashCharacter::Move(const FInputActionValue& Value)
 {
 	if (ActionState != EActionState::EAS_Unoccupied) return;
 	if (!GetController()) return;
-		
-	// const FVector Forward = GetActorForwardVector();
-	// const FVector Right = GetActorRightVector();
-
-	// AddMovementInput(Forward, MovementVector.X);
-	// AddMovementInput(Right, MovementVector.Y);
+	if (ActionState == EActionState::EAS_HitReacting) return;
 
 	const FVector2D MovementVector = Value.Get<FVector2D>();
 	const FRotator ControlRotation = GetControlRotation();
@@ -98,6 +93,7 @@ void ASlashCharacter::Look(const FInputActionValue& Value)
 void ASlashCharacter::Jump(const FInputActionValue& Value)
 {
 	if (ActionState != EActionState::EAS_Unoccupied) return;
+	if (ActionState == EActionState::EAS_HitReacting) return;
 
 	Super::Jump();
 }
@@ -106,6 +102,7 @@ void ASlashCharacter::Attack(const FInputActionValue& Value)
 {
 	if (ActionState != EActionState::EAS_Unoccupied) return;
 	if (CharacterState == ECharacterState::ECS_Unequipped) return;
+	if (ActionState == EActionState::EAS_HitReacting) return;
 	
 	ActionState = EActionState::EAS_Attacking;
 	PlayAttackMontage();
@@ -114,6 +111,7 @@ void ASlashCharacter::Attack(const FInputActionValue& Value)
 void ASlashCharacter::Equip(const FInputActionValue& Value)
 {
 	if (ActionState != EActionState::EAS_Unoccupied) return;
+	if (ActionState == EActionState::EAS_HitReacting) return;
 	
 	const bool CanDisarm = EquippedWeapon && EquipMontage && CharacterState != ECharacterState::ECS_Unequipped;
 	const bool CanArm = EquippedWeapon && EquipMontage && CharacterState == ECharacterState::ECS_Unequipped;
@@ -156,6 +154,24 @@ void ASlashCharacter::PlayEquipMontage(const FName& SectionName) const
 		AnimInstance->Montage_Play(EquipMontage);
 		AnimInstance->Montage_JumpToSection(SectionName, EquipMontage);
 	}
+}
+
+void ASlashCharacter::PlayHitReactMontage(const FName& SectionName) const
+{
+	Super::PlayHitReactMontage(SectionName);
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && HitReactMontage)
+	{
+		AnimInstance->Montage_Play(HitReactMontage);
+		AnimInstance->Montage_JumpToSection(SectionName, HitReactMontage);
+	}
+}
+
+void ASlashCharacter::OnHitReactMontageEnd()
+{
+	Super::OnHitReactMontageEnd();
+	ActionState = EActionState::EAS_Unoccupied;
 }
 
 void ASlashCharacter::OnAttackMontageEnd()
@@ -206,7 +222,13 @@ void ASlashCharacter::GetHit_Implementation(const FVector& ImpactPoint)
 {
 	Super::GetHit_Implementation(ImpactPoint);
 
+	SetWeaponCollisionEnabled(ECollisionEnabled::NoCollision);
+
 	if (HitSound) UGameplayStatics::PlaySoundAtLocation(this, HitSound, ImpactPoint);
 	if (HitParticles) UGameplayStatics::SpawnEmitterAtLocation(this, HitParticles, ImpactPoint);
+
+	const FName SectionName = DirectionalHitReact(ImpactPoint);
+	PlayHitReactMontage(SectionName);
+	ActionState = EActionState::EAS_HitReacting;
 }
 

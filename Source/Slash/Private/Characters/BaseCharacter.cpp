@@ -97,3 +97,7 @@ void ABaseCharacter::PlayHitReactMontage(const FName& SectionName) const
 		AnimInstance->Montage_JumpToSection(SectionName, HitReactMontage);
 	}
 }
+
+void ABaseCharacter::OnHitReactMontageEnd()
+{
+}

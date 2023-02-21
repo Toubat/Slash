@@ -46,8 +46,7 @@ protected:
 
 	virtual void OnAttackMontageEnd() override;
 
-	UFUNCTION(BlueprintCallable)
-	void OnHitReactMontageEnd();
+	virtual void OnHitReactMontageEnd() override;
 
 	UFUNCTION()
 	void OnPawnSeen(APawn* SeenPawn);

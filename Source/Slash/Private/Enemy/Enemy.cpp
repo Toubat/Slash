@@ -223,7 +223,9 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint)
 	// DRAW_SPHERE_COLOR(ImpactPoint, FColor::Orange);
 	if (EnemyState == EEnemyState::EES_Dead) return;
 	ShowHealthBar();
-
+	SetWeaponCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetWorldTimerManager().ClearTimer(PatrolTimer);
+	
 	const FName SectionName = DirectionalHitReact(ImpactPoint);
 
 	if (AttributeComponent && AttributeComponent->IsAlive()) {
@@ -233,6 +235,7 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint)
 		EnemyState = EEnemyState::EES_Dead;
 		PlayDeathMontage();
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		GetCharacterMovement()->bOrientRotationToMovement = false;
 		SetLifeSpan(5.f);
 		HideHealthBar();
 	}

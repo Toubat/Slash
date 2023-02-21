@@ -41,6 +41,9 @@ public:
 
 	virtual void PlayHitReactMontage(const FName& SectionName) const;
 
+	UFUNCTION(BlueprintCallable)
+	virtual void OnHitReactMontageEnd();
+
 protected:
 	virtual void BeginPlay() override;
 
