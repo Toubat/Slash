@@ -41,6 +41,10 @@ public:
 	// Setters
 	FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }
 
+	FORCEINLINE void SetHitReactTimer(const float Time) { GetWorldTimerManager().SetTimer(HitReactTimer, this, &ASlashCharacter::OnHitReactMontageEnd, Time); }
+
+	FORCEINLINE void ClearHitReactTimer() { GetWorldTimerManager().ClearTimer(HitReactTimer); }
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -124,4 +128,6 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly, Category = Montages)
 	UAnimMontage* EquipMontage;
+
+	FTimerHandle HitReactTimer;
 };

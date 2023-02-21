@@ -171,6 +171,7 @@ void ASlashCharacter::PlayHitReactMontage(const FName& SectionName) const
 void ASlashCharacter::OnHitReactMontageEnd()
 {
 	Super::OnHitReactMontageEnd();
+	ClearHitReactTimer();
 	ActionState = EActionState::EAS_Unoccupied;
 }
 
@@ -222,6 +223,7 @@ void ASlashCharacter::GetHit_Implementation(const FVector& ImpactPoint)
 {
 	Super::GetHit_Implementation(ImpactPoint);
 
+	ClearHitReactTimer();
 	SetWeaponCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	if (HitSound) UGameplayStatics::PlaySoundAtLocation(this, HitSound, ImpactPoint);
@@ -230,5 +232,6 @@ void ASlashCharacter::GetHit_Implementation(const FVector& ImpactPoint)
 	const FName SectionName = DirectionalHitReact(ImpactPoint);
 	PlayHitReactMontage(SectionName);
 	ActionState = EActionState::EAS_HitReacting;
+	SetHitReactTimer(1.f);
 }
 

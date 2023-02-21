@@ -62,6 +62,12 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	EEnemyState EnemyState = EEnemyState::EES_Patrolling;
+
+	/**
+	 * Combat
+	 */
+	UPROPERTY(BlueprintReadOnly, Category = Combat)
+	AActor* CombatTarget;
 	
 private:
 	void PatrolTimerFinished() const;
@@ -77,12 +83,6 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AWeapon> WeaponClass;
-
-	/**
-	 * Combat
-	 */
-	UPROPERTY(VisibleAnywhere)
-	AActor* CombatTarget;
 
 	FTimerHandle PatrolTimer;
 
