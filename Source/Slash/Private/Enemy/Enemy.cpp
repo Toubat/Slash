@@ -168,7 +168,7 @@ void AEnemy::PlayAttackMontage() const
 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	UAnimMontage* AttackMontage = EquippedWeapon->GetEquipState() == ECharacterState::ECS_EquippedOneHandedWeapon ? AttackMontage_OneHand : AttackMontage_TwoHand;
-	TArray<FName> Sections = { TEXT("Attack1"), TEXT("Attack2"), TEXT("Attack3") };
+	TArray<FName> Sections = { TEXT("Attack1"), TEXT("Attack2"), TEXT("Attack3"), TEXT("Attack4"), TEXT("Attack5") };
 	
 	if (AnimInstance && AttackMontage) {
 		AnimInstance->Montage_Play(AttackMontage);
