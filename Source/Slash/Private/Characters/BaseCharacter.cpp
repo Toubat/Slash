@@ -7,6 +7,7 @@
 #include "Animation/AnimMontage.h"
 #include "Components/AttributeComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Slash/DebugMacros.h"
 
 // Sets default values
 ABaseCharacter::ABaseCharacter()
@@ -100,4 +101,22 @@ void ABaseCharacter::PlayHitReactMontage(const FName& SectionName) const
 
 void ABaseCharacter::OnHitReactMontageEnd()
 {
+}
+
+FVector ABaseCharacter::GetTranslationWrapTarget()
+{
+	if (CombatTarget == nullptr) return FVector::ZeroVector;
+
+	const FVector TargetLocation = CombatTarget->GetActorLocation();
+	const FVector Location = GetActorLocation();
+	FVector FromTarget = FVector(Location - TargetLocation).GetSafeNormal();
+	FromTarget *= WarpTargetDistance;
+
+	return TargetLocation + FromTarget;
+}
+
+FVector ABaseCharacter::GetRotationWrapTarget()
+{
+	if (CombatTarget == nullptr) return FVector::ZeroVector;
+	return CombatTarget->GetActorLocation();
 }

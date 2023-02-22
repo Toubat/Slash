@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/HitInterface.h"
+#include "Characters/CharacterTypes.h"	
 #include "BaseCharacter.generated.h"
 
 class AWeapon;
@@ -44,8 +45,17 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void OnHitReactMontageEnd();
 
+	UFUNCTION(BlueprintCallable)
+	FVector GetTranslationWrapTarget();
+
+	UFUNCTION(BlueprintCallable)
+	FVector GetRotationWrapTarget();
+	
 protected:
 	virtual void BeginPlay() override;
+
+	UPROPERTY(BlueprintReadOnly)
+	EDeathPose DeathPose;
 
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
 	AWeapon* EquippedWeapon;
@@ -56,6 +66,15 @@ protected:
 	UPROPERTY(EditAnywhere, Category = VisualEffects)
 	UParticleSystem* HitParticles;
 
+	/**
+	 * Combat
+	 */
+	UPROPERTY(BlueprintReadOnly, Category = Combat)
+	AActor* CombatTarget;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	double WarpTargetDistance = 75.f;
+	
 	/**
 	 * Components
 	 */

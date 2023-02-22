@@ -58,16 +58,7 @@ protected:
 	void ChoosePatrolTarget();
 
 	UPROPERTY(BlueprintReadOnly)
-	EDeathPose DeathPose;
-
-	UPROPERTY(BlueprintReadOnly)
 	EEnemyState EnemyState = EEnemyState::EES_Patrolling;
-
-	/**
-	 * Combat
-	 */
-	UPROPERTY(BlueprintReadOnly, Category = Combat)
-	AActor* CombatTarget;
 	
 private:
 	void PatrolTimerFinished() const;
@@ -87,13 +78,13 @@ private:
 	FTimerHandle PatrolTimer;
 
 	UPROPERTY(EditAnywhere)
-	double CombatRadius = 1000.f;
+	double CombatRadius = 1500.f;
 
 	UPROPERTY(EditAnywhere)
 	double PatrolRadius = 200.f;
 
 	UPROPERTY(EditAnywhere)
-	double AttackRadius = 150.f;
+	double AttackRadius = 250.f;
 	
 	UPROPERTY(EditAnywhere, Category = Combat)
 	float PatrollingSpeed = 125.f;

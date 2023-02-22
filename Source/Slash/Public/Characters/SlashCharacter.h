@@ -9,6 +9,7 @@
 #include "Containers/Deque.h"
 #include "SlashCharacter.generated.h"
 
+class USlashOverlay;
 class UInputMappingContext;
 class UInputAction;
 class USpringArmComponent;
@@ -16,6 +17,7 @@ class UCameraComponent;
 class UGroomComponent;
 class AItem;
 class UAnimMontage;
+class USlashOverlay;
 
 UCLASS()
 class SLASH_API ASlashCharacter : public ABaseCharacter
@@ -30,6 +32,16 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void GetHit_Implementation(const FVector& ImpactPoint) override;
+
+	void SetHUDHealthPercent(const float Percent);
+
+	void SetHUDStaminaPercent(const float Percent);
+
+	void SetHUDGoldCount(const int32 Count);
+
+	void SetHUDSoulCount(const int32 Count);
+
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 	// Getters
 	FORCEINLINE AItem* GetOverlappingItem() const { return OverlappingItem; }
@@ -73,6 +85,11 @@ protected:
 	virtual void PlayHitReactMontage(const FName& SectionName) const override;
 
 	virtual void OnHitReactMontageEnd() override;
+
+	virtual void PlayDeathMontage() override;
+
+	UFUNCTION(BlueprintCallable)
+	void OnDeathMontageEnd();
 
 	UFUNCTION(BlueprintCallable)
 	void OnEquipMontageEnd();
@@ -130,4 +147,6 @@ private:
 	UAnimMontage* EquipMontage;
 
 	FTimerHandle HitReactTimer;
+
+	USlashOverlay* SlashOverlay;
 };

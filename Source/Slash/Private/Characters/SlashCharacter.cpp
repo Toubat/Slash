@@ -13,6 +13,9 @@
 #include "Items/Item.h"
 #include "Items/Weapons/Weapon.h"
 #include "Animation/AnimMontage.h"
+#include "Components/AttributeComponent.h"
+#include "HUD/SlashHUD.h"
+#include "HUD/SlashOverlay.h"
 
 
 ASlashCharacter::ASlashCharacter()
@@ -56,9 +59,16 @@ void ASlashCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	Tags.Add(FName("SlashCharacter"));
-	
+
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 	{
+		if (const ASlashHUD* SlashHUD = Cast<ASlashHUD>(PlayerController->GetHUD())) SlashOverlay = SlashHUD->GetSlashOverlay();
+		SetHUDHealthPercent(AttributeComponent->GetHealthPercent());
+		SetHUDStaminaPercent(1.f);
+		SetHUDGoldCount(0);
+		SetHUDSoulCount(0);
+		SlashOverlay->SetDieBorderVisibility(false);
+		
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
 			Subsystem->AddMappingContext(SlashContext, 0);
@@ -68,9 +78,10 @@ void ASlashCharacter::BeginPlay()
 
 void ASlashCharacter::Move(const FInputActionValue& Value)
 {
-	if (ActionState != EActionState::EAS_Unoccupied) return;
 	if (!GetController()) return;
+	if (ActionState != EActionState::EAS_Unoccupied) return;
 	if (ActionState == EActionState::EAS_HitReacting) return;
+	if (CharacterState == ECharacterState::ECS_Dead) return;
 
 	const FVector2D MovementVector = Value.Get<FVector2D>();
 	const FRotator ControlRotation = GetControlRotation();
@@ -94,6 +105,7 @@ void ASlashCharacter::Jump(const FInputActionValue& Value)
 {
 	if (ActionState != EActionState::EAS_Unoccupied) return;
 	if (ActionState == EActionState::EAS_HitReacting) return;
+	if (CharacterState == ECharacterState::ECS_Dead) return;
 
 	Super::Jump();
 }
@@ -101,8 +113,9 @@ void ASlashCharacter::Jump(const FInputActionValue& Value)
 void ASlashCharacter::Attack(const FInputActionValue& Value)
 {
 	if (ActionState != EActionState::EAS_Unoccupied) return;
-	if (CharacterState == ECharacterState::ECS_Unequipped) return;
 	if (ActionState == EActionState::EAS_HitReacting) return;
+	if (CharacterState == ECharacterState::ECS_Unequipped) return;
+	if (CharacterState == ECharacterState::ECS_Dead) return;
 	
 	ActionState = EActionState::EAS_Attacking;
 	PlayAttackMontage();
@@ -112,6 +125,7 @@ void ASlashCharacter::Equip(const FInputActionValue& Value)
 {
 	if (ActionState != EActionState::EAS_Unoccupied) return;
 	if (ActionState == EActionState::EAS_HitReacting) return;
+	if (CharacterState == ECharacterState::ECS_Dead) return;
 	
 	const bool CanDisarm = EquippedWeapon && EquipMontage && CharacterState != ECharacterState::ECS_Unequipped;
 	const bool CanArm = EquippedWeapon && EquipMontage && CharacterState == ECharacterState::ECS_Unequipped;
@@ -175,6 +189,21 @@ void ASlashCharacter::OnHitReactMontageEnd()
 	ActionState = EActionState::EAS_Unoccupied;
 }
 
+void ASlashCharacter::PlayDeathMontage()
+{
+	Super::PlayDeathMontage();
+
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance(); AnimInstance && DeathMontage) {
+		AnimInstance->Montage_Play(DeathMontage);
+		AnimInstance->Montage_JumpToSection("Death", DeathMontage);
+	}
+}
+
+void ASlashCharacter::OnDeathMontageEnd()
+{
+	SlashOverlay->SetDieBorderVisibility(true);
+}
+
 void ASlashCharacter::OnAttackMontageEnd()
 {
 	ActionState = EActionState::EAS_Unoccupied;
@@ -229,9 +258,45 @@ void ASlashCharacter::GetHit_Implementation(const FVector& ImpactPoint)
 	if (HitSound) UGameplayStatics::PlaySoundAtLocation(this, HitSound, ImpactPoint);
 	if (HitParticles) UGameplayStatics::SpawnEmitterAtLocation(this, HitParticles, ImpactPoint);
 
-	const FName SectionName = DirectionalHitReact(ImpactPoint);
-	PlayHitReactMontage(SectionName);
-	ActionState = EActionState::EAS_HitReacting;
-	SetHitReactTimer(1.f);
+	if (AttributeComponent->IsAlive()) {
+		const FName SectionName = DirectionalHitReact(ImpactPoint);
+		PlayHitReactMontage(SectionName);
+		SetHitReactTimer(1.f);
+		ActionState = EActionState::EAS_HitReacting;
+	} else if (CharacterState != ECharacterState::ECS_Dead) {
+		PlayDeathMontage();
+		CharacterState = ECharacterState::ECS_Dead;
+		SetWeaponCollisionEnabled(ECollisionEnabled::NoCollision);
+		Tags.Add(FName("Dead"));
+	}
+}
+
+void ASlashCharacter::SetHUDHealthPercent(const float Percent)
+{
+	if (SlashOverlay && AttributeComponent) SlashOverlay->SetHealthPercent(Percent);
+}
+
+void ASlashCharacter::SetHUDStaminaPercent(const float Percent)
+{
+	if (SlashOverlay && AttributeComponent) SlashOverlay->SetStaminaPercent(Percent);
+}
+
+void ASlashCharacter::SetHUDGoldCount(const int32 Count)
+{
+	if (SlashOverlay) SlashOverlay->SetGoldCount(Count);
+}
+
+void ASlashCharacter::SetHUDSoulCount(const int32 Count)
+{
+	if (SlashOverlay) SlashOverlay->SetSoulCount(Count);
+}
+
+float ASlashCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
+                                  AActor* DamageCauser)
+{
+	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	SetHUDHealthPercent(AttributeComponent->GetHealthPercent());
+
+	return DamageAmount;
 }
 

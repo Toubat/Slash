@@ -191,7 +191,8 @@ void AEnemy::OnHitReactMontageEnd()
 void AEnemy::OnPawnSeen(APawn* SeenPawn)
 {
 	if (EnemyState != EEnemyState::EES_Patrolling) return;
-	
+	if (SeenPawn->ActorHasTag(FName("Dead"))) return;
+		
 	if (SeenPawn->ActorHasTag(FName("SlashCharacter"))) {
 		GetWorldTimerManager().ClearTimer(PatrolTimer);
 		CombatTarget = SeenPawn;
@@ -201,6 +202,7 @@ void AEnemy::OnPawnSeen(APawn* SeenPawn)
 bool AEnemy::InTargetRange(const AActor* Target, const double Radius) const
 {
 	if (Target == nullptr) return false;
+	if (Target->ActorHasTag(FName("Dead"))) return false;
 
 	const double DistToTarget = (Target->GetActorLocation() - GetActorLocation()).Size();
 	DRAW_SPHERE_SINGLE_FRAME(Target->GetActorLocation());
