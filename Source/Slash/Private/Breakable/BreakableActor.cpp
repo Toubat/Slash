@@ -50,7 +50,7 @@ void ABreakableActor::OnBreak(const FChaosBreakEvent& BreakEvent)
 	if(GEngine) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("BreakableActor::OnBreak"));
 	if (HitSound) UGameplayStatics::PlaySoundAtLocation(this, HitSound, BreakEvent.Location);
 
-	if (GetWorld() && !TreasureClasses.IsEmpty() && FMath::RandBool()) {
+	if (GetWorld() && !TreasureClasses.IsEmpty() && FMath::RandRange(0.f, 1.f) < 0.8f) {
 		const int32 Idx = FMath::RandRange(0, TreasureClasses.Num() - 1);
 		GetWorld()->SpawnActor<ATreasure>(TreasureClasses[Idx], GetActorLocation(), GetActorRotation());
 	}

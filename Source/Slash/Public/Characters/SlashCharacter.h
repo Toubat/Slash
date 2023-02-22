@@ -7,6 +7,7 @@
 #include "InputActionValue.h"
 #include "CharacterTypes.h"
 #include "Containers/Deque.h"
+#include "Interfaces/PickupInterface.h"
 #include "SlashCharacter.generated.h"
 
 class USlashOverlay;
@@ -18,9 +19,11 @@ class UGroomComponent;
 class AItem;
 class UAnimMontage;
 class USlashOverlay;
+class ASoul;
+class ATreasure;
 
 UCLASS()
-class SLASH_API ASlashCharacter : public ABaseCharacter
+class SLASH_API ASlashCharacter : public ABaseCharacter, public IPickupInterface
 {
 	GENERATED_BODY()
 
@@ -41,6 +44,12 @@ public:
 
 	void SetHUDSoulCount(const int32 Count);
 
+	virtual void SetOverlappingItem(AItem* Item) override;
+
+	virtual void AddSouls(ASoul* Soul) override;
+
+	virtual void AddGold(ATreasure* Treasure) override;
+
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 	// Getters
@@ -51,8 +60,6 @@ public:
 	FORCEINLINE AWeapon* GetEquippedWeapon() const { return EquippedWeapon; }
 
 	// Setters
-	FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }
-
 	FORCEINLINE void SetHitReactTimer(const float Time) { GetWorldTimerManager().SetTimer(HitReactTimer, this, &ASlashCharacter::OnHitReactMontageEnd, Time); }
 
 	FORCEINLINE void ClearHitReactTimer() { GetWorldTimerManager().ClearTimer(HitReactTimer); }
@@ -73,6 +80,8 @@ protected:
 
 	void Attack(const FInputActionValue& Value);
 
+	void Dodge(const FInputActionValue& Value);
+
 	/**
 	 * Play Montage functions
 	 */
@@ -81,6 +90,9 @@ protected:
 	virtual void OnAttackMontageEnd() override;
 
 	void PlayEquipMontage(const FName& SectionName) const;
+
+	UFUNCTION(BlueprintCallable)
+	void OnEquipMontageEnd();
 
 	virtual void PlayHitReactMontage(const FName& SectionName) const override;
 
@@ -91,8 +103,10 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void OnDeathMontageEnd();
 
+	void PlayDodgeMontage();
+
 	UFUNCTION(BlueprintCallable)
-	void OnEquipMontageEnd();
+	void OnDodgeMontageEnd();
 
 	UFUNCTION(BlueprintCallable)
 	void OnUnEquipMontageEnd();
@@ -120,6 +134,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputAction* AttackAction;
+
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputAction* DodgeAction;
 	
 private:
 	UPROPERTY(VisibleAnywhere)
@@ -145,6 +162,9 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly, Category = Montages)
 	UAnimMontage* EquipMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = Montages)
+	UAnimMontage* DodgeMontage;
 
 	FTimerHandle HitReactTimer;
 

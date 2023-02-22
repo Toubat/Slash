@@ -13,6 +13,7 @@
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "HUD/HealthBarComponent.h"
+#include "Items/Soul.h"
 #include "Items/Weapons/Weapon.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/GameplayStatics.h"
@@ -140,6 +141,9 @@ void AEnemy::BeginPlay()
 		if (DefaultWeapon) DefaultWeapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
 		EquippedWeapon = DefaultWeapon;
 	}
+
+	if (AttributeComponent) AttributeComponent->AddSouls(FMath::RandRange(0, 50));
+	if (AttributeComponent) AttributeComponent->AddGold(FMath::RandRange(0, 50));
 	
 	Tags.Add("Enemy");
 }
@@ -240,6 +244,11 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint)
 		GetCharacterMovement()->bOrientRotationToMovement = false;
 		SetLifeSpan(5.f);
 		HideHealthBar();
+		
+		if (GetWorld())
+		{
+			if (ASoul* SpawnSoul = GetWorld()->SpawnActor<ASoul>(SoulClass, GetActorLocation(), GetActorRotation())) SpawnSoul->SetSouls(AttributeComponent->GetSouls());
+		}
 	}
 	
 	if (HitSound) UGameplayStatics::PlaySoundAtLocation(this, HitSound, ImpactPoint);

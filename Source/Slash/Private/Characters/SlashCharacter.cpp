@@ -16,6 +16,9 @@
 #include "Components/AttributeComponent.h"
 #include "HUD/SlashHUD.h"
 #include "HUD/SlashOverlay.h"
+#include "Items/Soul.h"
+#include "Items/Treasure.h"
+#include "Slash/DebugMacros.h"
 
 
 ASlashCharacter::ASlashCharacter()
@@ -104,7 +107,6 @@ void ASlashCharacter::Look(const FInputActionValue& Value)
 void ASlashCharacter::Jump(const FInputActionValue& Value)
 {
 	if (ActionState != EActionState::EAS_Unoccupied) return;
-	if (ActionState == EActionState::EAS_HitReacting) return;
 	if (CharacterState == ECharacterState::ECS_Dead) return;
 
 	Super::Jump();
@@ -113,12 +115,23 @@ void ASlashCharacter::Jump(const FInputActionValue& Value)
 void ASlashCharacter::Attack(const FInputActionValue& Value)
 {
 	if (ActionState != EActionState::EAS_Unoccupied) return;
-	if (ActionState == EActionState::EAS_HitReacting) return;
 	if (CharacterState == ECharacterState::ECS_Unequipped) return;
 	if (CharacterState == ECharacterState::ECS_Dead) return;
 	
 	ActionState = EActionState::EAS_Attacking;
 	PlayAttackMontage();
+}
+
+void ASlashCharacter::Dodge(const FInputActionValue& Value)
+{
+	if (ActionState != EActionState::EAS_Unoccupied) return;
+	if (CharacterState == ECharacterState::ECS_Dead) return;
+	if (AttributeComponent && !AttributeComponent->HasEnoughStamina()) return;
+
+	ActionState = EActionState::EAS_Dodging;
+	AttributeComponent->UseStamina(AttributeComponent->GetDodgeCost());
+	GetMesh()->SetGenerateOverlapEvents(false);
+	PlayDodgeMontage();
 }
 
 void ASlashCharacter::Equip(const FInputActionValue& Value)
@@ -199,6 +212,20 @@ void ASlashCharacter::PlayDeathMontage()
 	}
 }
 
+void ASlashCharacter::PlayDodgeMontage()
+{
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance(); AnimInstance && DeathMontage) {
+		AnimInstance->Montage_Play(DodgeMontage);
+		AnimInstance->Montage_JumpToSection("Default", DodgeMontage);
+	}
+}
+
+void ASlashCharacter::OnDodgeMontageEnd()
+{
+	ActionState = EActionState::EAS_Unoccupied;
+	GetMesh()->SetGenerateOverlapEvents(true);
+}
+
 void ASlashCharacter::OnDeathMontageEnd()
 {
 	SlashOverlay->SetDieBorderVisibility(true);
@@ -232,6 +259,12 @@ void ASlashCharacter::OnWeaponDisarm()
 void ASlashCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (AttributeComponent && SlashOverlay)
+	{
+		AttributeComponent->RegenerateStamina(DeltaTime);
+		SlashOverlay->SetStaminaPercent(AttributeComponent->GetStaminaPercent());	
+	}
 }
 
 void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -245,6 +278,7 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Jump);
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Equip);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Attack);
+		EnhancedInputComponent->BindAction(DodgeAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Dodge);
 	}
 }
 
@@ -289,6 +323,23 @@ void ASlashCharacter::SetHUDGoldCount(const int32 Count)
 void ASlashCharacter::SetHUDSoulCount(const int32 Count)
 {
 	if (SlashOverlay) SlashOverlay->SetSoulCount(Count);
+}
+
+void ASlashCharacter::SetOverlappingItem(AItem* Item)
+{
+	OverlappingItem = Item;
+}
+
+void ASlashCharacter::AddSouls(ASoul* Soul)
+{
+	if (AttributeComponent) AttributeComponent->AddSouls(Soul->GetSouls());
+	if (SlashOverlay) SlashOverlay->SetSoulCount(AttributeComponent->GetSouls());
+}
+
+void ASlashCharacter::AddGold(ATreasure* Treasure)
+{
+	if (AttributeComponent) AttributeComponent->AddGold(Treasure->GetGold());
+	if (SlashOverlay) SlashOverlay->SetGoldCount(AttributeComponent->GetGold());
 }
 
 float ASlashCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,

@@ -4,26 +4,29 @@
 
 #include "CoreMinimal.h"
 #include "Items/Item.h"
-#include "Treasure.generated.h"
+#include "Soul.generated.h"
 
-class USoundBase;
-
+class UNiagaraSystem;
+/**
+ * 
+ */
 UCLASS()
-class SLASH_API ATreasure : public AItem
+class SLASH_API ASoul : public AItem
 {
 	GENERATED_BODY()
 
-public:
-	virtual void Tick(float DeltaTime) override;
-	
 protected:
 	virtual void OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
 
 private:
+	UPROPERTY(EditAnywhere)
+	UNiagaraSystem* PickupEffect;
 
-	UPROPERTY(EditAnywhere, Category = Treasure)
-	int32 Gold = 5;
+	UPROPERTY(EditAnywhere)
+	int32 Souls;
 
 public:
-	FORCEINLINE int32 GetGold() const { return Gold; }
+	FORCEINLINE int32 GetSouls() const { return Souls; }
+
+	FORCEINLINE void SetSouls(int32 NewSouls) { Souls = NewSouls; }
 };

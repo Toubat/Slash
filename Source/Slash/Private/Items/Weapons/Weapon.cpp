@@ -46,7 +46,7 @@ void AWeapon::Equip(USceneComponent* InParent, FName InSocketName, AActor* NewOw
 	SetOwner(NewOwner);
 	SetInstigator(NewInstigator);
 
-	if (EmbersEffect) EmbersEffect->Deactivate();
+	if (ItemEffect) ItemEffect->Deactivate();
 	if (EquipSound) UGameplayStatics::PlaySoundAtLocation(this, EquipSound, GetActorLocation());
 	if (Sphere) Sphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }

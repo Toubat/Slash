@@ -7,6 +7,7 @@
 #include "Characters/CharacterTypes.h"
 #include "Enemy.generated.h"
 
+class ASoul;
 class UPawnSensingComponent;
 class UHealthBarComponent;
 class UAnimMontage;
@@ -103,4 +104,7 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "AI Navigation")
 	TArray<AActor*> PatrolTargets;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	TSubclassOf<ASoul> SoulClass;
 };
